@@ -28,16 +28,19 @@ app.use('/', howItWorksRoutes);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-async function start() {
+// Kick off a lazy MongoDB connection on first load (best-effort; routes await getDb()
+// before using the database, so this just warms the pool when possible).
+connect().catch((err) => {
+  console.error('Initial MongoDB connection failed:', err.message);
+});
+
+// Only start an HTTP listener when run directly (e.g. `node index.js` locally).
+// When required by a serverless wrapper (e.g. Vercel's api/index.js), we just
+// export the Express app and let the platform invoke it per-request.
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`MongoTV running at http://localhost:${PORT}`);
   });
-  connect().catch((err) => {
-    console.error('Initial MongoDB connection failed:', err.message);
-  });
 }
 
-start().catch((err) => {
-  console.error('Failed to start:', err);
-  process.exit(1);
-});
+module.exports = app;
