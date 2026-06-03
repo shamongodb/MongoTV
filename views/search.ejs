@@ -1,0 +1,385 @@
+<%- include('partials/head') %>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a href="/" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"></path>
+          </svg>
+          <span class="sr-only">Home</span>
+        </a>
+        <a href="/chat/recommendations" aria-label="Recommendations">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.5 3.5c-4.9.1-9.4 2.1-12.2 5.3-2.7 3.2-3.3 7.6-1.2 11.7.2.4.6.6 1 .6 1.1 0 2.2-.2 3.1-.6 4.9-1.8 8.9-6.1 10.5-11.3.4-1.3.7-2.7.8-4 0-.5-.4-.9-.9-.9h-1.1zM8.5 17.4c-.4.2-.9.3-1.3.4-.7-2.2-.3-4.6 1.2-6.4 1.8-2.1 4.5-3.5 7.6-4-1.2 4.3-4.3 7.9-7.5 10z"></path>
+          </svg>
+          <span class="sr-only">Recommendations</span>
+        </a>
+        <a href="/search" class="active" aria-label="Search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.77 13.29l4.72 4.72 1.41-1.41-4.72-4.72A7.5 7.5 0 0 0 10.5 3zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"></path>
+          </svg>
+          <span class="sr-only">Search</span>
+        </a>
+      </nav>
+    </aside>
+    <div class="main">
+      <header class="top-nav">
+        <span class="logo">MongoTV</span>
+      </header>
+      <main class="main-content">
+        <section class="search-shell">
+          <h1 class="page-title">Search</h1>
+          <p class="page-subtitle">Start typing and MongoTV will guess titles early, then blend title, story, and cast/crew relevance.</p>
+          <div class="search-bar-wrap">
+            <input
+              id="search-input"
+              class="search-input"
+              type="search"
+              name="q"
+              placeholder="Search titles, actors, directors..."
+              autocomplete="off"
+              spellcheck="false"
+              value="<%= initialQuery || '' %>"
+              aria-label="Search catalog"
+            />
+          </div>
+          <div id="suggestion-row" class="suggestion-row" hidden></div>
+        </section>
+
+        <section id="best-guess-section" class="result-section" hidden>
+          <h2 class="row-title">Best Guess</h2>
+          <div id="best-guess-row" class="row-scroll"></div>
+        </section>
+
+        <section id="results-section" class="result-section" hidden>
+          <h2 class="row-title">Top Results</h2>
+          <div id="results-row" class="row-scroll"></div>
+        </section>
+
+        <section id="search-empty-state" class="empty-state">
+          <p>Enter at least 2 characters to search.</p>
+        </section>
+      </main>
+    </div>
+  </div>
+  <%- include('partials/chat-overlay') %>
+
+  <style>
+    .search-shell { margin-bottom: 1.3rem; }
+    .page-title {
+      margin: 0 0 0.45rem;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .page-subtitle {
+      margin: 0 0 1rem;
+      color: var(--text-muted);
+      max-width: 80ch;
+      line-height: 1.5;
+      font-size: 1.06rem;
+    }
+    .search-bar-wrap {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 0.6rem 0.75rem;
+    }
+    .search-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 1.15rem;
+      outline: none;
+      font-family: inherit;
+      padding: 0.35rem 0.25rem;
+    }
+    .search-input::placeholder {
+      color: rgba(255,255,255,0.45);
+    }
+    .suggestion-row {
+      margin-top: 0.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+    .suggestion-chip {
+      border: 1px solid rgba(71,162,72,0.42);
+      background: rgba(71,162,72,0.12);
+      color: var(--text);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+    }
+    .suggestion-chip:hover,
+    .suggestion-chip:focus-visible {
+      background: rgba(71,162,72,0.22);
+      outline: none;
+    }
+    .result-section { margin: 1.35rem 0 0; }
+    .row-title {
+      margin: 0 0 0.85rem;
+      font-size: 1.45rem;
+      font-weight: 700;
+    }
+    .row-scroll {
+      display: flex;
+      gap: 1.2rem;
+      overflow-x: auto;
+      padding-bottom: 0.7rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--orange-dim) var(--bg-card);
+    }
+    .row-scroll::-webkit-scrollbar { height: 6px; }
+    .row-scroll::-webkit-scrollbar-track { background: var(--bg-card); border-radius: 3px; }
+    .row-scroll::-webkit-scrollbar-thumb { background: var(--orange-dim); border-radius: 3px; }
+    .content-card {
+      flex: 0 0 216px;
+      background: var(--bg-card);
+      border-radius: 10px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .content-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      border-color: rgba(71,162,72,0.4);
+    }
+    .content-card:focus-visible {
+      outline: 2px solid rgba(71,162,72,0.7);
+      outline-offset: 2px;
+    }
+    .card-poster {
+      height: 324px;
+      background: linear-gradient(135deg, var(--orange-dim), var(--orange));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .card-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .card-poster span {
+      font-size: 3rem;
+      font-weight: 700;
+      color: rgba(0,0,0,0.5);
+    }
+    .card-info { padding: 0.95rem 1rem 1rem; }
+    .card-title {
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 1.12rem;
+      line-height: 1.25;
+    }
+    .card-meta {
+      font-size: 0.97rem;
+      color: var(--text-muted);
+      display: block;
+    }
+    .card-description {
+      margin-top: 0.45rem;
+      display: block;
+      color: rgba(255,255,255,0.82);
+      font-size: 0.92rem;
+      line-height: 1.35;
+      max-height: 3.8em;
+      overflow: hidden;
+    }
+    .empty-state {
+      margin-top: 1.25rem;
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 1.1rem 1.2rem;
+      color: var(--text-muted);
+      font-size: 1.06rem;
+    }
+    .loading-text {
+      margin-top: 1rem;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+  </style>
+
+  <script>
+    (function searchPage() {
+      const MIN_QUERY_LENGTH = 2;
+      const DEBOUNCE_MS = 120;
+      const searchInput = document.getElementById('search-input');
+      const suggestionRow = document.getElementById('suggestion-row');
+      const bestGuessSection = document.getElementById('best-guess-section');
+      const resultsSection = document.getElementById('results-section');
+      const bestGuessRow = document.getElementById('best-guess-row');
+      const resultsRow = document.getElementById('results-row');
+      const emptyState = document.getElementById('search-empty-state');
+
+      if (!searchInput) return;
+
+      let debounceTimer = null;
+      let activeRequestId = 0;
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function summarize(text) {
+        const raw = String(text || '').trim();
+        if (!raw) return '';
+        return raw.length > 150 ? raw.slice(0, 147) + '...' : raw;
+      }
+
+      function cardMarkup(item) {
+        const safeId = encodeURIComponent(String(item._id || ''));
+        const safeTitle = escapeHtml(item.title || 'Untitled');
+        const safeMetaYear = item.year ? escapeHtml(String(item.year)) : 'Year unknown';
+        const safeType = item.type ? ' | ' + escapeHtml(String(item.type)) : '';
+        const safeDescription = escapeHtml(summarize(item.description || item.plot));
+        const poster = item.poster ? String(item.poster).trim() : '';
+        const posterMarkup = poster
+          ? '<img src="' + escapeHtml(poster) + '" alt="' + safeTitle + ' poster" loading="lazy" />'
+          : '<span>' + escapeHtml((item.title || 'U').charAt(0)) + '</span>';
+        return (
+          '<a href="/content/' + safeId + '" class="content-card">' +
+            '<div class="card-poster">' + posterMarkup + '</div>' +
+            '<div class="card-info">' +
+              '<span class="card-title">' + safeTitle + '</span>' +
+              '<span class="card-meta">' + safeMetaYear + safeType + '</span>' +
+              (safeDescription ? '<span class="card-description">' + safeDescription + '</span>' : '') +
+            '</div>' +
+          '</a>'
+        );
+      }
+
+      function setSuggestions(suggestions) {
+        const chips = (Array.isArray(suggestions) ? suggestions : [])
+          .map((item) => String(item || '').trim())
+          .filter(Boolean)
+          .slice(0, 6);
+
+        if (!chips.length) {
+          suggestionRow.hidden = true;
+          suggestionRow.innerHTML = '';
+          return;
+        }
+
+        suggestionRow.hidden = false;
+        suggestionRow.innerHTML = chips.map((chip) => (
+          '<button type="button" class="suggestion-chip" data-suggestion="' + escapeHtml(chip) + '">' +
+            escapeHtml(chip) +
+          '</button>'
+        )).join('');
+      }
+
+      function setRows(payload) {
+        const bestGuess = payload?.bestGuess || null;
+        const results = Array.isArray(payload?.results) ? payload.results : [];
+
+        if (bestGuess) {
+          bestGuessRow.innerHTML = cardMarkup(bestGuess);
+          bestGuessSection.hidden = false;
+        } else {
+          bestGuessRow.innerHTML = '';
+          bestGuessSection.hidden = true;
+        }
+
+        if (results.length) {
+          resultsRow.innerHTML = results.map((item) => cardMarkup(item)).join('');
+          resultsSection.hidden = false;
+          emptyState.hidden = true;
+        } else {
+          resultsRow.innerHTML = '';
+          resultsSection.hidden = true;
+          emptyState.hidden = false;
+          emptyState.innerHTML = '<p>No results yet. Try a broader title, actor, or director.</p>';
+        }
+      }
+
+      async function runSearch(query) {
+        const requestId = ++activeRequestId;
+        try {
+          const response = await fetch('/api/search/suggest?q=' + encodeURIComponent(query), {
+            headers: { Accept: 'application/json' },
+          });
+          const payload = await response.json();
+          if (requestId !== activeRequestId) return;
+          setSuggestions(payload?.suggestions || []);
+          setRows(payload || {});
+        } catch {
+          if (requestId !== activeRequestId) return;
+          bestGuessSection.hidden = true;
+          resultsSection.hidden = true;
+          suggestionRow.hidden = true;
+          emptyState.hidden = false;
+          emptyState.innerHTML = '<p>Search is temporarily unavailable. Please try again.</p>';
+        }
+      }
+
+      function onInputChange() {
+        const query = String(searchInput.value || '').trim();
+        const url = new URL(window.location.href);
+        if (query) {
+          url.searchParams.set('q', query);
+        } else {
+          url.searchParams.delete('q');
+        }
+        window.history.replaceState({}, '', url.pathname + url.search);
+
+        if (query.length < MIN_QUERY_LENGTH) {
+          activeRequestId += 1;
+          suggestionRow.hidden = true;
+          suggestionRow.innerHTML = '';
+          bestGuessSection.hidden = true;
+          bestGuessRow.innerHTML = '';
+          resultsSection.hidden = true;
+          resultsRow.innerHTML = '';
+          emptyState.hidden = false;
+          emptyState.innerHTML = '<p>Enter at least 2 characters to search.</p>';
+          return;
+        }
+
+        emptyState.hidden = false;
+        emptyState.innerHTML = '<p class="loading-text">Searching...</p>';
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          runSearch(query);
+        }, DEBOUNCE_MS);
+      }
+
+      suggestionRow.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-suggestion]');
+        if (!button) return;
+        const suggestion = String(button.getAttribute('data-suggestion') || '').trim();
+        if (!suggestion) return;
+        searchInput.value = suggestion;
+        onInputChange();
+        searchInput.focus();
+      });
+
+      searchInput.addEventListener('input', onInputChange);
+
+      if (searchInput.value.trim().length >= MIN_QUERY_LENGTH) {
+        onInputChange();
+      } else {
+        searchInput.focus();
+      }
+    })();
+  </script>
+</body>
+</html>

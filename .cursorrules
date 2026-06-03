@@ -1,0 +1,19 @@
+{
+  "project_name": "MongoTV",
+  "framework": "Express.js",
+  "database": {
+    "provider": "MongoDB Native Driver",
+    "driver_version": "6.x",
+    "vector_search": "MongoDB Atlas Search"
+  },
+  "ai_stack": {
+    "embedding_provider": "VoyageAI",
+    "model": "voyage-3"
+  },
+  "constraints": [
+    "Strictly NO Mongoose. Use MongoClient and db.collection()",
+    "Use EJS for the SlingTV-inspired frontend",
+    "Implement horizontal scrolling genre rows (SlingTV style)",
+    "Embeddings must be stored in a field named 'embedding' for Atlas Vector Search"
+  ]
+}

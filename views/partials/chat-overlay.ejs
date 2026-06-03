@@ -1,0 +1,826 @@
+<div class="mongo-chat-launcher-wrap">
+  <button
+    id="mongo-voice-launcher"
+    class="mongo-chat-launcher mongo-voice-launcher"
+    type="button"
+    aria-label="Start voice recommendations (Cmd+Shift+2)"
+    title="Start voice recommendations (Cmd+Shift+2)"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 14.5a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5.5a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.93V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.57A7 7 0 0 1 5 11.5a1 1 0 0 1 2 0 5 5 0 0 0 10 0z"></path>
+    </svg>
+  </button>
+  <button id="mongo-chat-launcher" class="mongo-chat-launcher" type="button" aria-label="Open AI Guide chat">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18.5 3.5c-4.9.1-9.4 2.1-12.2 5.3-2.7 3.2-3.3 7.6-1.2 11.7.2.4.6.6 1 .6 1.1 0 2.2-.2 3.1-.6 4.9-1.8 8.9-6.1 10.5-11.3.4-1.3.7-2.7.8-4 0-.5-.4-.9-.9-.9h-1.1zM8.5 17.4c-.4.2-.9.3-1.3.4-.7-2.2-.3-4.6 1.2-6.4 1.8-2.1 4.5-3.5 7.6-4-1.2 4.3-4.3 7.9-7.5 10z"></path>
+    </svg>
+  </button>
+</div>
+
+<section id="mongo-voice-dialog" class="mongo-voice-dialog" aria-hidden="true">
+  <div class="mongo-voice-hero" aria-hidden="true">
+    <div class="mongo-voice-ring">
+      <div class="mongo-voice-mic-core">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 14.5a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5.5a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0 7 7 0 0 1-6 6.93V21h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2.57A7 7 0 0 1 5 11.5a1 1 0 0 1 2 0 5 5 0 0 0 10 0z"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <p id="mongo-voice-label" class="mongo-voice-label">Listening...</p>
+  <canvas id="mongo-voice-meter" class="mongo-voice-meter" width="260" height="72" aria-label="Audio activity meter"></canvas>
+  <p id="mongo-voice-error" class="mongo-voice-error" role="status" aria-live="polite"></p>
+  <button id="mongo-voice-stop" class="mongo-voice-stop" type="button">Stop</button>
+</section>
+
+<section id="mongo-chat-panel" class="mongo-chat-panel" aria-hidden="true">
+  <header class="mongo-chat-header">
+    <strong>Mongo Leaf Guide</strong>
+    <button id="mongo-chat-close" class="mongo-chat-icon-btn" type="button" aria-label="Close chat">x</button>
+  </header>
+  <div id="mongo-chat-messages" class="mongo-chat-messages"></div>
+  <div class="mongo-chat-toolbar">
+    <button id="mongo-chat-new-session" type="button" class="mongo-chat-new-session">New Session</button>
+  </div>
+  <form id="mongo-chat-form" class="mongo-chat-form">
+    <input type="text" id="mongo-chat-input" name="message" placeholder="Ask for something to watch..." autocomplete="off">
+    <button type="submit">Send</button>
+  </form>
+</section>
+
+<style>
+  .mongo-chat-launcher-wrap {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .mongo-chat-launcher {
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: linear-gradient(135deg, #47A248, #3d8b40);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  }
+  .mongo-chat-launcher:hover {
+    transform: translateY(-1px);
+  }
+  .mongo-chat-launcher svg {
+    width: 28px;
+    height: 28px;
+    fill: currentColor;
+  }
+  .mongo-voice-launcher {
+    background: linear-gradient(135deg, #2b2f2b, #1f231f);
+  }
+  .mongo-voice-launcher.is-recording {
+    background: linear-gradient(135deg, #b72323, #8f1c1c);
+    animation: mongo-voice-pulse 1.1s ease-in-out infinite;
+  }
+  .mongo-voice-launcher:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    animation: none;
+  }
+  @keyframes mongo-voice-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(203, 49, 49, 0.45), 0 8px 24px rgba(0,0,0,0.45); }
+    70% { box-shadow: 0 0 0 10px rgba(203, 49, 49, 0), 0 8px 24px rgba(0,0,0,0.45); }
+    100% { box-shadow: 0 0 0 0 rgba(203, 49, 49, 0), 0 8px 24px rgba(0,0,0,0.45); }
+  }
+  .mongo-voice-dialog {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(380px, calc(100vw - 2rem));
+    border: 1px solid rgba(142, 170, 220, 0.18);
+    border-radius: 14px;
+    background: radial-gradient(circle at 50% -20%, rgba(98, 132, 221, 0.42), rgba(19, 25, 40, 0.96) 55%);
+    box-shadow: 0 20px 46px rgba(0,0,0,0.55);
+    padding: 1.2rem 1rem 0.95rem;
+    z-index: 1300;
+    display: none;
+    gap: 0.72rem;
+  }
+  .mongo-voice-dialog.open {
+    display: grid;
+  }
+  .mongo-voice-hero {
+    display: grid;
+    place-items: center;
+  }
+  .mongo-voice-ring {
+    width: 130px;
+    height: 130px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle, rgba(101, 187, 255, 0.33) 0%, rgba(76, 132, 235, 0.2) 50%, rgba(52, 68, 114, 0.14) 100%);
+    box-shadow: inset 0 0 0 1px rgba(145, 184, 255, 0.18), 0 0 0 12px rgba(96, 156, 245, 0.08);
+    animation: mongo-voice-ring-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes mongo-voice-ring-pulse {
+    0%, 100% { transform: scale(1); box-shadow: inset 0 0 0 1px rgba(145, 184, 255, 0.18), 0 0 0 12px rgba(96, 156, 245, 0.08); }
+    50% { transform: scale(1.03); box-shadow: inset 0 0 0 1px rgba(145, 184, 255, 0.24), 0 0 0 18px rgba(96, 156, 245, 0.12); }
+  }
+  .mongo-voice-mic-core {
+    width: 68px;
+    height: 68px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(165deg, #5ec2ff, #3f81ef 70%);
+    box-shadow: 0 9px 24px rgba(50, 132, 255, 0.45);
+  }
+  .mongo-voice-mic-core svg {
+    width: 30px;
+    height: 30px;
+    fill: #fff;
+  }
+  .mongo-voice-label {
+    margin: 0;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: rgba(238, 245, 255, 0.92);
+  }
+  .mongo-voice-meter {
+    width: 100%;
+    height: 74px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+  }
+  .mongo-voice-error {
+    margin: 0;
+    min-height: 1rem;
+    text-align: center;
+    font-size: 0.82rem;
+    color: #ff9f9f;
+  }
+  .mongo-voice-stop {
+    justify-self: center;
+    border: 1px solid rgba(199, 220, 255, 0.32);
+    border-radius: 8px;
+    background: rgba(233, 238, 255, 0.09);
+    color: rgba(243, 248, 255, 0.94);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.42rem 1rem;
+  }
+  .mongo-voice-stop:hover {
+    border-color: rgba(233, 243, 255, 0.64);
+  }
+  .mongo-chat-panel {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 5.5rem;
+    top: 4rem;
+    width: min(380px, calc(100vw - 2rem));
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    z-index: 1200;
+    display: none;
+    flex-direction: column;
+  }
+  .mongo-chat-panel.open {
+    display: flex;
+  }
+  .mongo-chat-panel.emphasis {
+    border-color: rgba(71,162,72,0.8);
+    box-shadow: 0 0 0 2px rgba(71,162,72,0.24), 0 24px 50px rgba(0,0,0,0.55);
+  }
+  .mongo-chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .mongo-chat-icon-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+  }
+  .mongo-chat-icon-btn:hover {
+    color: var(--text);
+  }
+  .mongo-chat-messages {
+    min-height: 180px;
+    max-height: none;
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    padding: 0.8rem;
+  }
+  .mongo-chat-msg {
+    margin-bottom: 0.75rem;
+  }
+  .mongo-chat-msg.user {
+    text-align: right;
+  }
+  .mongo-chat-bubble {
+    display: inline-block;
+    max-width: 88%;
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    white-space: pre-wrap;
+  }
+  .mongo-chat-msg.user .mongo-chat-bubble {
+    background: var(--orange);
+    color: #fff;
+  }
+  .mongo-chat-msg.bot .mongo-chat-bubble {
+    background: var(--bg-hover);
+    color: var(--text);
+  }
+  .mongo-chat-toolbar {
+    padding: 0 0.8rem 0.6rem;
+  }
+  .mongo-chat-new-session {
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 0.35rem 0.65rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .mongo-chat-new-session:hover {
+    color: var(--text);
+    border-color: rgba(255,255,255,0.3);
+  }
+  .mongo-chat-form {
+    display: flex;
+    gap: 0.45rem;
+    padding: 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .mongo-chat-form input {
+    flex: 1;
+    min-width: 0;
+    background: var(--bg-dark);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    font-family: inherit;
+    padding: 0.6rem 0.7rem;
+  }
+  .mongo-chat-form input:focus {
+    outline: none;
+    border-color: var(--orange);
+  }
+  .mongo-chat-form button {
+    border: none;
+    border-radius: 8px;
+    background: var(--orange);
+    color: #fff;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.6rem 0.85rem;
+  }
+  .mongo-chat-form button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  (function chatOverlayInit() {
+    const CHAT_SESSION_KEY = 'mongotv_chat_session_id';
+    const CHAT_OPEN_ON_NAV_KEY = 'mongotv_chat_open_on_nav';
+    const initialSessionId = '<%= typeof sessionId !== "undefined" ? sessionId : "" %>';
+    const launcher = document.getElementById('mongo-chat-launcher');
+    const panel = document.getElementById('mongo-chat-panel');
+    const closeBtn = document.getElementById('mongo-chat-close');
+    const form = document.getElementById('mongo-chat-form');
+    const input = document.getElementById('mongo-chat-input');
+    const messages = document.getElementById('mongo-chat-messages');
+    const newSessionBtn = document.getElementById('mongo-chat-new-session');
+    const voiceLauncher = document.getElementById('mongo-voice-launcher');
+    const voiceDialog = document.getElementById('mongo-voice-dialog');
+    const voiceLabel = document.getElementById('mongo-voice-label');
+    const voiceMeter = document.getElementById('mongo-voice-meter');
+    const voiceError = document.getElementById('mongo-voice-error');
+    const voiceStopBtn = document.getElementById('mongo-voice-stop');
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+
+    if (!launcher || !panel || !form || !input || !messages) return;
+
+    function generateClientSessionId() {
+      return 'session-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function resolveSessionId() {
+      const stored = sessionStorage.getItem(CHAT_SESSION_KEY);
+      if (stored) return stored;
+      const fallback = initialSessionId || generateClientSessionId();
+      sessionStorage.setItem(CHAT_SESSION_KEY, fallback);
+      return fallback;
+    }
+
+    let sessionId = resolveSessionId();
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let audioContext = null;
+    let analyserNode = null;
+    let meterAnimationId = null;
+    let recorderStopPromise = null;
+    let isRecording = false;
+    let isStoppingRecording = false;
+    let autoStopTimer = null;
+    const meterLevels = [];
+    const recordedChunks = [];
+
+    function supportsVoiceRecording() {
+      return (
+        !!voiceLauncher &&
+        !!voiceDialog &&
+        !!voiceLabel &&
+        !!voiceMeter &&
+        !!voiceStopBtn &&
+        !!navigator.mediaDevices &&
+        typeof navigator.mediaDevices.getUserMedia === 'function' &&
+        typeof window.MediaRecorder !== 'undefined' &&
+        typeof AudioContextCtor !== 'undefined'
+      );
+    }
+
+    function dedupeByMovieId(items) {
+      const seen = new Set();
+      return (Array.isArray(items) ? items : []).filter((item) => {
+        const id = item && item._id ? String(item._id) : '';
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    }
+
+    function addMessage(text, isUser) {
+      if (!text) return;
+      const container = document.createElement('div');
+      container.className = 'mongo-chat-msg ' + (isUser ? 'user' : 'bot');
+      const bubble = document.createElement('div');
+      bubble.className = 'mongo-chat-bubble';
+      bubble.textContent = text;
+      container.appendChild(bubble);
+      messages.appendChild(container);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function setVoiceError(text) {
+      if (!voiceError) return;
+      voiceError.textContent = String(text || '');
+    }
+
+    function setVoiceDialogOpen(open) {
+      if (!voiceDialog) return;
+      voiceDialog.classList.toggle('open', !!open);
+      voiceDialog.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    function setVoiceLabel(text) {
+      if (!voiceLabel) return;
+      voiceLabel.textContent = text;
+    }
+
+    function emphasizePanel() {
+      panel.classList.add('emphasis');
+      setTimeout(() => panel.classList.remove('emphasis'), 950);
+    }
+
+    function openPanel() {
+      panel.classList.add('open');
+      panel.setAttribute('aria-hidden', 'false');
+      if (!messages.dataset.loaded) {
+        loadSessionHistory();
+      }
+      input.focus();
+    }
+
+    function closePanel() {
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
+    }
+
+    function drawIdleVoiceMeter() {
+      if (!voiceMeter) return;
+      const ctx = voiceMeter.getContext('2d');
+      if (!ctx) return;
+      ctx.clearRect(0, 0, voiceMeter.width, voiceMeter.height);
+      const barCount = 27;
+      const gap = 3;
+      const availableWidth = voiceMeter.width - 18;
+      const barWidth = Math.max(4, Math.floor((availableWidth - gap * (barCount - 1)) / barCount));
+      const baseline = Math.floor(voiceMeter.height / 2) + 1;
+      const grad = ctx.createLinearGradient(0, 0, voiceMeter.width, 0);
+      grad.addColorStop(0, 'rgba(166, 119, 255, 0.82)');
+      grad.addColorStop(0.5, 'rgba(94, 245, 236, 0.9)');
+      grad.addColorStop(1, 'rgba(166, 119, 255, 0.82)');
+
+      ctx.fillStyle = grad;
+      for (let i = 0; i < barCount; i += 1) {
+        const centerDistance = Math.abs(i - (barCount - 1) / 2) / ((barCount - 1) / 2);
+        const halfHeight = Math.max(3, Math.floor(7 * (1 - centerDistance * 0.85)));
+        const x = 9 + i * (barWidth + gap);
+        ctx.fillRect(x, baseline - halfHeight, barWidth, halfHeight * 2);
+      }
+    }
+
+    function stopMeterLoop() {
+      if (meterAnimationId) {
+        cancelAnimationFrame(meterAnimationId);
+        meterAnimationId = null;
+      }
+      if (audioContext) {
+        audioContext.close().catch(() => {});
+        audioContext = null;
+      }
+      analyserNode = null;
+      drawIdleVoiceMeter();
+    }
+
+    function startMeterLoop(stream) {
+      if (!voiceMeter || !AudioContextCtor) return;
+      stopMeterLoop();
+      audioContext = new AudioContextCtor();
+      analyserNode = audioContext.createAnalyser();
+      analyserNode.fftSize = 256;
+      analyserNode.smoothingTimeConstant = 0.8;
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyserNode);
+
+      const bins = new Uint8Array(analyserNode.frequencyBinCount);
+      const ctx = voiceMeter.getContext('2d');
+      if (!ctx) return;
+      const barCount = 27;
+      const gap = 3;
+      const availableWidth = voiceMeter.width - 18;
+      const barWidth = Math.max(4, Math.floor((availableWidth - gap * (barCount - 1)) / barCount));
+      const baseline = Math.floor(voiceMeter.height / 2) + 1;
+
+      function drawRoundedRect(x, y, width, height, radius) {
+        const r = Math.min(radius, height / 2, width / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + width - r, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+        ctx.lineTo(x + width, y + height - r);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        ctx.lineTo(x + r, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      const draw = () => {
+        if (!analyserNode) return;
+        analyserNode.getByteFrequencyData(bins);
+        let sum = 0;
+        for (let i = 0; i < bins.length; i += 1) sum += bins[i];
+        const average = bins.length ? sum / bins.length : 0;
+
+        ctx.clearRect(0, 0, voiceMeter.width, voiceMeter.height);
+        const glow = ctx.createRadialGradient(
+          voiceMeter.width / 2,
+          baseline,
+          10,
+          voiceMeter.width / 2,
+          baseline,
+          voiceMeter.width / 2
+        );
+        glow.addColorStop(0, 'rgba(108, 221, 255, 0.2)');
+        glow.addColorStop(1, 'rgba(108, 221, 255, 0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, voiceMeter.width, voiceMeter.height);
+        const grad = ctx.createLinearGradient(0, 0, voiceMeter.width, 0);
+        grad.addColorStop(0, '#8f63ff');
+        grad.addColorStop(0.5, '#65f0eb');
+        grad.addColorStop(1, '#8f63ff');
+        ctx.fillStyle = grad;
+
+        for (let i = 0; i < barCount; i += 1) {
+          const x = 9 + i * (barWidth + gap);
+          const start = Math.floor((i / barCount) * bins.length);
+          const end = Math.max(start + 1, Math.floor(((i + 1) / barCount) * bins.length));
+          let bandSum = 0;
+          for (let j = start; j < end; j += 1) bandSum += bins[j];
+          const bandAvg = bandSum / (end - start);
+          const centerDistance = Math.abs(i - (barCount - 1) / 2) / ((barCount - 1) / 2);
+          const envelope = 1 - Math.min(1, centerDistance * 0.82);
+          const targetLevel = Math.max(0.08, Math.min(1, (bandAvg / 170) * envelope * 1.2));
+          const previous = typeof meterLevels[i] === 'number' ? meterLevels[i] : 0.1;
+          const smoothed = previous * 0.72 + targetLevel * 0.28;
+          meterLevels[i] = smoothed;
+          const halfHeight = Math.max(3, Math.floor(smoothed * (voiceMeter.height / 2 - 7)));
+          const y = baseline - halfHeight;
+          const h = halfHeight * 2;
+          drawRoundedRect(x, y, barWidth, h, 4);
+        }
+
+        if (isRecording) {
+          setVoiceLabel(average > 12 ? 'Receiving audio...' : 'Listening...');
+        }
+
+        meterAnimationId = requestAnimationFrame(draw);
+      };
+
+      draw();
+    }
+
+    function cleanupMediaResources() {
+      if (autoStopTimer) {
+        clearTimeout(autoStopTimer);
+        autoStopTimer = null;
+      }
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        mediaStream = null;
+      }
+      mediaRecorder = null;
+      recorderStopPromise = null;
+      stopMeterLoop();
+    }
+
+    async function loadSessionHistory() {
+      try {
+        const res = await fetch('/chat/history?sessionId=' + encodeURIComponent(sessionId));
+        if (!res.ok) return;
+        const data = await res.json();
+        const history = Array.isArray(data.messages) ? data.messages : [];
+        messages.innerHTML = '';
+        history.forEach((item) => addMessage(item.content, item.role === 'user'));
+        messages.dataset.loaded = '1';
+      } catch (_) {
+        // Keep UI interactive even when history fetch fails.
+      }
+    }
+
+    async function sendChatMessage(rawMessage, options = {}) {
+      const message = String(rawMessage || '').trim();
+      if (!message) return null;
+      const voiceMode = !!options.voiceMode;
+
+      addMessage(message, true);
+      const submitButton = form.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, sessionId, voiceMode }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const msg = data.detail ? data.error + ' (' + data.detail + ')' : (data.error || 'Something went wrong.');
+          addMessage(msg, false);
+          return { response: '', results: [], sessionId, error: msg };
+        }
+        if (data.sessionId && data.sessionId !== sessionId) {
+          sessionId = data.sessionId;
+          sessionStorage.setItem(CHAT_SESSION_KEY, sessionId);
+        }
+        addMessage(data.response, false);
+        messages.dataset.loaded = '1';
+        const uniqueResults = dedupeByMovieId(data.results);
+        if (uniqueResults.length) {
+          const recommendationsUrl = '/chat/recommendations?sessionId=' + encodeURIComponent(sessionId);
+          const onRecommendationsPage = window.location.pathname === '/chat/recommendations';
+          if (onRecommendationsPage) {
+            window.dispatchEvent(
+              new CustomEvent('mongotv:recommendations:new', {
+                detail: {
+                  sessionId,
+                  query: message,
+                  results: uniqueResults,
+                },
+              })
+            );
+            openPanel();
+            emphasizePanel();
+          } else {
+            sessionStorage.setItem(CHAT_OPEN_ON_NAV_KEY, '1');
+            window.location.href = recommendationsUrl;
+          }
+        } else if (voiceMode && window.location.pathname !== '/chat/recommendations') {
+          const recommendationsUrl = '/chat/recommendations?sessionId=' + encodeURIComponent(sessionId);
+          sessionStorage.setItem(CHAT_OPEN_ON_NAV_KEY, '1');
+          window.location.href = recommendationsUrl;
+        }
+        return {
+          response: String(data.response || ''),
+          voiceSummary: String(data.voiceSummary || ''),
+          results: uniqueResults,
+          sessionId,
+        };
+      } catch (_) {
+        addMessage('Network error. Try again.', false);
+        return { response: '', results: [], sessionId, error: 'Network error. Try again.' };
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+
+    async function transcribeAndSend(blob) {
+      if (!blob || blob.size === 0) {
+        setVoiceError('No audio captured. Try again.');
+        return;
+      }
+      setVoiceError('');
+      setVoiceLabel('Transcribing...');
+      try {
+        const response = await fetch('/chat/transcribe', {
+          method: 'POST',
+          headers: { 'Content-Type': blob.type || 'audio/webm' },
+          body: blob,
+        });
+        const rawBody = await response.text();
+        let payload = {};
+        try {
+          payload = rawBody ? JSON.parse(rawBody) : {};
+        } catch (_) {
+          payload = {};
+        }
+        if (!response.ok) {
+          const plainBodyError = rawBody && !rawBody.trim().startsWith('<') ? rawBody.trim() : '';
+          throw new Error(payload?.detail || payload?.error || plainBodyError || `Voice transcription failed (${response.status}).`);
+        }
+        const transcript = String(payload?.text || '').trim();
+        if (!transcript) {
+          throw new Error('No transcript was returned.');
+        }
+        setVoiceLabel('Sending...');
+        setVoiceError('');
+        await sendChatMessage(transcript, { voiceMode: true });
+        setVoiceDialogOpen(false);
+      } catch (err) {
+        setVoiceError(err?.message || 'Voice transcription failed.');
+        setVoiceLabel('Listening...');
+      }
+    }
+
+    async function startRecording() {
+      if (!supportsVoiceRecording()) return;
+      if (isRecording || isStoppingRecording) return;
+
+      try {
+        setVoiceError('');
+        setVoiceLabel('Listening...');
+        setVoiceDialogOpen(true);
+        recordedChunks.length = 0;
+
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const preferredMime = 'audio/webm;codecs=opus';
+        const mimeType = window.MediaRecorder.isTypeSupported(preferredMime) ? preferredMime : 'audio/webm';
+        mediaRecorder = new MediaRecorder(mediaStream, { mimeType });
+
+        mediaRecorder.addEventListener('dataavailable', (event) => {
+          if (event.data && event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+        });
+        recorderStopPromise = new Promise((resolve, reject) => {
+          mediaRecorder.addEventListener('stop', () => resolve(), { once: true });
+          mediaRecorder.addEventListener(
+            'error',
+            (event) => reject(event.error || new Error('Voice recorder failed.')),
+            { once: true }
+          );
+        });
+        mediaRecorder.start(250);
+
+        isRecording = true;
+        voiceLauncher.classList.add('is-recording');
+        startMeterLoop(mediaStream);
+        autoStopTimer = setTimeout(() => {
+          stopRecording();
+        }, 60000);
+      } catch (err) {
+        cleanupMediaResources();
+        setVoiceDialogOpen(true);
+        setVoiceLabel('Listening...');
+        setVoiceError(err?.message || 'Could not access microphone.');
+      }
+    }
+
+    async function stopRecording() {
+      if (!isRecording || !mediaRecorder || isStoppingRecording) return;
+      isStoppingRecording = true;
+      isRecording = false;
+      voiceLauncher.classList.remove('is-recording');
+      setVoiceLabel('Processing...');
+      stopMeterLoop();
+
+      try {
+        if (mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+        await recorderStopPromise;
+        const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+        cleanupMediaResources();
+        await transcribeAndSend(blob);
+      } catch (err) {
+        cleanupMediaResources();
+        setVoiceDialogOpen(true);
+        setVoiceLabel('Listening...');
+        setVoiceError(err?.message || 'Failed to process recording.');
+      } finally {
+        isStoppingRecording = false;
+      }
+    }
+
+    function toggleRecording() {
+      if (!supportsVoiceRecording()) {
+        if (voiceLauncher) {
+          voiceLauncher.disabled = true;
+        }
+        setVoiceDialogOpen(true);
+        setVoiceLabel('Unsupported');
+        setVoiceError('Voice capture is not supported in this browser.');
+        return;
+      }
+      if (isRecording) {
+        stopRecording();
+        return;
+      }
+      startRecording();
+    }
+
+    launcher.addEventListener('click', openPanel);
+    closeBtn.addEventListener('click', closePanel);
+    if (voiceLauncher) {
+      voiceLauncher.addEventListener('click', () => toggleRecording());
+    }
+    if (voiceStopBtn) {
+      voiceStopBtn.addEventListener('click', () => stopRecording());
+    }
+    if (!supportsVoiceRecording() && voiceLauncher) {
+      voiceLauncher.disabled = true;
+      voiceLauncher.title = 'Voice capture is unavailable in this browser';
+    }
+    drawIdleVoiceMeter();
+    document.addEventListener('keydown', (event) => {
+      const isVoiceShortcut = (event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'Digit2';
+      if (isVoiceShortcut) {
+        event.preventDefault();
+        toggleRecording();
+        return;
+      }
+      if (event.key === 'Escape') {
+        setVoiceDialogOpen(false);
+        closePanel();
+      }
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = '';
+      await sendChatMessage(message);
+    });
+
+    newSessionBtn.addEventListener('click', () => {
+      sessionStorage.removeItem(CHAT_SESSION_KEY);
+      sessionId = generateClientSessionId();
+      sessionStorage.setItem(CHAT_SESSION_KEY, sessionId);
+      messages.innerHTML = '';
+      delete messages.dataset.loaded;
+      window.dispatchEvent(
+        new CustomEvent('mongotv:recommendations:reset', {
+          detail: { sessionId },
+        })
+      );
+      addMessage('Started a new session.', false);
+      openPanel();
+      emphasizePanel();
+    });
+
+    if (sessionStorage.getItem(CHAT_OPEN_ON_NAV_KEY) === '1') {
+      sessionStorage.removeItem(CHAT_OPEN_ON_NAV_KEY);
+      openPanel();
+      emphasizePanel();
+    }
+  })();
+</script>

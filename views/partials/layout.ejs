@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a href="/" class="<%= typeof activePage !== 'undefined' && activePage === 'browse' ? 'active' : '' %>" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"></path>
+          </svg>
+          <span class="sr-only">Home</span>
+        </a>
+        <a href="/chat/recommendations" class="<%= typeof activePage !== 'undefined' && activePage === 'chat' ? 'active' : '' %>" aria-label="Recommendations">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.5 3.5c-4.9.1-9.4 2.1-12.2 5.3-2.7 3.2-3.3 7.6-1.2 11.7.2.4.6.6 1 .6 1.1 0 2.2-.2 3.1-.6 4.9-1.8 8.9-6.1 10.5-11.3.4-1.3.7-2.7.8-4 0-.5-.4-.9-.9-.9h-1.1zM8.5 17.4c-.4.2-.9.3-1.3.4-.7-2.2-.3-4.6 1.2-6.4 1.8-2.1 4.5-3.5 7.6-4-1.2 4.3-4.3 7.9-7.5 10z"></path>
+          </svg>
+          <span class="sr-only">Recommendations</span>
+        </a>
+        <a href="/how-it-works" class="<%= typeof activePage !== 'undefined' && activePage === 'how-it-works' ? 'active' : '' %>" aria-label="How It Works">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M11 7h2V5h-2v2zm0 12h2v-8h-2v8zm1-17C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path>
+          </svg>
+          <span class="sr-only">How It Works</span>
+        </a>
+      </nav>
+    </aside>
+    <div class="main">
+      <header class="top-nav">
+        <span class="logo">MongoTV</span>
+      </header>
+      <main class="main-content">
+        <%- body %>
+      </main>
+    </div>
+  </div>
+  <%- include('partials/chat-overlay') %>
+</body>
+</html>

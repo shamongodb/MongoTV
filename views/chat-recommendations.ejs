@@ -1,0 +1,292 @@
+<%- include('partials/head') %>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a href="/" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"></path>
+          </svg>
+          <span class="sr-only">Home</span>
+        </a>
+        <a href="/chat/recommendations" class="active" aria-label="Recommendations">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.5 3.5c-4.9.1-9.4 2.1-12.2 5.3-2.7 3.2-3.3 7.6-1.2 11.7.2.4.6.6 1 .6 1.1 0 2.2-.2 3.1-.6 4.9-1.8 8.9-6.1 10.5-11.3.4-1.3.7-2.7.8-4 0-.5-.4-.9-.9-.9h-1.1zM8.5 17.4c-.4.2-.9.3-1.3.4-.7-2.2-.3-4.6 1.2-6.4 1.8-2.1 4.5-3.5 7.6-4-1.2 4.3-4.3 7.9-7.5 10z"></path>
+          </svg>
+          <span class="sr-only">Recommendations</span>
+        </a>
+        <a href="/search" aria-label="Search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.77 13.29l4.72 4.72 1.41-1.41-4.72-4.72A7.5 7.5 0 0 0 10.5 3zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"></path>
+          </svg>
+          <span class="sr-only">Search</span>
+        </a>
+      </nav>
+    </aside>
+    <div class="main">
+      <header class="top-nav">
+        <span class="logo">MongoTV</span>
+      </header>
+      <main class="main-content">
+        <h1 class="page-title">MongoTV Recommendations</h1>
+        <p class="page-subtitle">Use the mongo leaf in the bottom-right to chat. Every new recommendation set appears as another row here.</p>
+
+        <% if (!recommendationRows || recommendationRows.length === 0) { %>
+          <div id="recommendations-empty-state" class="empty-state">
+            <p>No recommendations yet for this session.</p>
+            <p>Open the mongo leaf chat and ask for something to watch.</p>
+          </div>
+        <% } %>
+        <div id="recommendation-rows">
+          <% if (recommendationRows && recommendationRows.length > 0) { %>
+            <% recommendationRows.forEach(function(row) { %>
+              <section class="recommendation-row">
+                <h2 class="row-title"><%= row.title %></h2>
+                <div class="row-scroll">
+                  <% row.items.forEach(function(item) { %>
+                    <a href="/content/<%= item._id %>" class="content-card">
+                      <div class="card-poster">
+                        <% if (item.poster) { %>
+                          <img src="<%= item.poster %>" alt="<%= item.title %> poster" loading="lazy" />
+                        <% } else { %>
+                          <span><%= (item.title || '')[0] %></span>
+                        <% } %>
+                      </div>
+                      <div class="card-info">
+                        <span class="card-title"><%= item.title %></span>
+                        <span class="card-meta">
+                          <%= item.year || 'Year unknown' %>
+                          <% if (item.type) { %> | <%= item.type %><% } %>
+                        </span>
+                        <% if (typeof item.score === 'number') { %>
+                          <span class="card-score">Match score: <%= item.score.toFixed(4) %></span>
+                        <% } %>
+                        <% if (item.reason || item.description) { %>
+                          <span class="card-reason"><%= item.reason || item.description %></span>
+                        <% } %>
+                      </div>
+                    </a>
+                  <% }); %>
+                </div>
+              </section>
+            <% }); %>
+          <% } %>
+        </div>
+      </main>
+    </div>
+  </div>
+  <%- include('partials/chat-overlay', { sessionId: sessionId }) %>
+  <style>
+    .page-title {
+      margin: 0 0 0.5rem;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .page-subtitle {
+      margin: 0 0 1.25rem;
+      color: var(--text-muted);
+      max-width: 78ch;
+      line-height: 1.5;
+      font-size: 1.08rem;
+    }
+    .empty-state {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 1.2rem;
+      color: var(--text-muted);
+      font-size: 1.06rem;
+    }
+    .empty-state p {
+      margin: 0 0 0.4rem;
+    }
+    .empty-state p:last-child {
+      margin-bottom: 0;
+    }
+    .recommendation-row {
+      margin-bottom: 2.3rem;
+    }
+    .row-title {
+      margin: 0 0 0.95rem;
+      font-size: 1.55rem;
+      font-weight: 700;
+    }
+    .row-scroll {
+      display: flex;
+      gap: 1.2rem;
+      overflow-x: auto;
+      padding-bottom: 0.7rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--orange-dim) var(--bg-card);
+    }
+    .row-scroll::-webkit-scrollbar { height: 6px; }
+    .row-scroll::-webkit-scrollbar-track { background: var(--bg-card); border-radius: 3px; }
+    .row-scroll::-webkit-scrollbar-thumb { background: var(--orange-dim); border-radius: 3px; }
+    .content-card {
+      flex: 0 0 216px;
+      background: var(--bg-card);
+      border-radius: 10px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .content-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      border-color: rgba(71,162,72,0.4);
+    }
+    .card-poster {
+      height: 324px;
+      background: linear-gradient(135deg, var(--orange-dim), var(--orange));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .card-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .card-poster span {
+      font-size: 3rem;
+      font-weight: 700;
+      color: rgba(0,0,0,0.5);
+    }
+    .card-info { padding: 0.95rem 1rem 1rem; }
+    .card-title {
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 1.12rem;
+      line-height: 1.25;
+    }
+    .card-meta {
+      font-size: 0.97rem;
+      color: var(--text-muted);
+      display: block;
+    }
+    .card-score {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.88);
+      display: block;
+    }
+    .card-reason {
+      margin-top: 0.5rem;
+      font-size: 0.92rem;
+      color: rgba(255,255,255,0.82);
+      display: block;
+      line-height: 1.4;
+      white-space: pre-line;
+    }
+  </style>
+  <script>
+    (function recommendationsLiveUpdates() {
+      const CHAT_SESSION_KEY = 'mongotv_chat_session_id';
+      const currentSessionId = '<%= sessionId %>';
+      const storedSessionId = sessionStorage.getItem(CHAT_SESSION_KEY);
+      if (storedSessionId && storedSessionId !== currentSessionId) {
+        window.location.replace('/chat/recommendations?sessionId=' + encodeURIComponent(storedSessionId));
+        return;
+      }
+
+      const rowsContainer = document.getElementById('recommendation-rows');
+      const emptyState = document.getElementById('recommendations-empty-state');
+      if (!rowsContainer) return;
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function dedupeResults(items) {
+        const seen = new Set();
+        return (Array.isArray(items) ? items : []).filter((item) => {
+          const id = item && item._id ? String(item._id).trim() : '';
+          const normalizedTitle = String(item?.title || '').trim().toLowerCase();
+          const normalizedYear = item?.year ? String(item.year).trim() : '';
+          const normalizedType = String(item?.type || '').trim().toLowerCase();
+          const dedupeKey = id || `${normalizedTitle}|${normalizedYear}|${normalizedType}`;
+          if (!dedupeKey || seen.has(dedupeKey)) return false;
+          seen.add(dedupeKey);
+          return true;
+        });
+      }
+
+      function buildReason(query, item) {
+        const existing = String(item?.reason || '').trim();
+        if (existing) return existing;
+        return String(item?.description || item?.plot || '').trim();
+      }
+
+      function rowMarkup(title, items) {
+        const query = String(title || '').replace(/^Based on:\s*/i, '');
+        const uniqueItems = dedupeResults(items);
+        const cards = uniqueItems.map((item) => {
+          const safeTitle = escapeHtml(item.title || 'Untitled');
+          const safeId = encodeURIComponent(String(item._id || ''));
+          const safeMetaYear = item.year ? escapeHtml(String(item.year)) : 'Year unknown';
+          const safeType = item.type ? ' | ' + escapeHtml(String(item.type)) : '';
+          const numericScore = typeof item.score === 'number' ? item.score : null;
+          const safeScore = numericScore !== null ? escapeHtml(Number(numericScore).toFixed(4)) : '';
+          const scoreMarkup = safeScore
+            ? '<span class="card-score">Match score: ' + safeScore + '</span>'
+            : '';
+          const safeReason = escapeHtml(buildReason(query, item));
+          const poster = item.poster ? String(item.poster).trim() : '';
+          const posterMarkup = poster
+            ? '<img src="' + escapeHtml(poster) + '" alt="' + safeTitle + ' poster" loading="lazy" />'
+            : '<span>' + escapeHtml((item.title || 'U').charAt(0)) + '</span>';
+          return (
+            '<a href="/content/' + safeId + '" class="content-card">' +
+              '<div class="card-poster">' + posterMarkup + '</div>' +
+              '<div class="card-info">' +
+                '<span class="card-title">' + safeTitle + '</span>' +
+                '<span class="card-meta">' + safeMetaYear + safeType + '</span>' +
+                scoreMarkup +
+                '<span class="card-reason">' + safeReason + '</span>' +
+              '</div>' +
+            '</a>'
+          );
+        }).join('');
+
+        return (
+          '<section class="recommendation-row">' +
+            '<h2 class="row-title">' + escapeHtml(title) + '</h2>' +
+            '<div class="row-scroll">' + cards + '</div>' +
+          '</section>'
+        );
+      }
+
+      window.addEventListener('mongotv:recommendations:new', (event) => {
+        const detail = event.detail || {};
+        const results = dedupeResults(detail.results);
+        if (!results.length) return;
+        if (emptyState) emptyState.remove();
+        const title = detail.query ? 'Based on: ' + detail.query : 'Recommended for you';
+        rowsContainer.insertAdjacentHTML('afterbegin', rowMarkup(title, results));
+      });
+
+      window.addEventListener('mongotv:recommendations:reset', () => {
+        rowsContainer.innerHTML = '';
+        if (!document.getElementById('recommendations-empty-state')) {
+          const block = document.createElement('div');
+          block.id = 'recommendations-empty-state';
+          block.className = 'empty-state';
+          block.innerHTML = '<p>No recommendations yet for this session.</p><p>Open the mongo leaf chat and ask for something to watch.</p>';
+          rowsContainer.insertAdjacentElement('beforebegin', block);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+<%- include('partials/head') %>
+</head>
+<body>
+  <%
+    const safeDetail = typeof detail !== 'undefined' && detail
+      ? detail
+      : {
+          title: item?.title || 'Untitled',
+          type: item?.type || null,
+          year: item?.year || null,
+          rated: item?.rated || null,
+          runtime: item?.runtime || null,
+          released: item?.released || null,
+          genres: Array.isArray(item?.genres) ? item.genres : [],
+          languages: Array.isArray(item?.languages) ? item.languages : [],
+          countries: Array.isArray(item?.countries) ? item.countries : [],
+          plot: item?.plot || item?.description || null,
+          fullplot: item?.fullplot || null,
+          cast: Array.isArray(item?.cast) ? item.cast : [],
+          directors: Array.isArray(item?.directors) ? item.directors : [],
+          writers: Array.isArray(item?.writers) ? item.writers : [],
+          awardsText: item?.awards?.text || null,
+          imdbRating: typeof item?.imdb?.rating === 'number' ? item.imdb.rating : null,
+          imdbVotes: typeof item?.imdb?.votes === 'number' ? item.imdb.votes : null,
+          tomatoesViewerRating:
+            typeof item?.tomatoes?.viewer?.rating === 'number' ? item.tomatoes.viewer.rating : null,
+          tomatoesViewerMeter:
+            typeof item?.tomatoes?.viewer?.meter === 'number' ? item.tomatoes.viewer.meter : null,
+          tomatoesViewerReviews:
+            typeof item?.tomatoes?.viewer?.numReviews === 'number'
+              ? item.tomatoes.viewer.numReviews
+              : null,
+        };
+  %>
+  <div class="app">
+    <aside class="sidebar">
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a href="/" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"></path>
+          </svg>
+          <span class="sr-only">Home</span>
+        </a>
+        <a href="/chat/recommendations" aria-label="Recommendations">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.5 3.5c-4.9.1-9.4 2.1-12.2 5.3-2.7 3.2-3.3 7.6-1.2 11.7.2.4.6.6 1 .6 1.1 0 2.2-.2 3.1-.6 4.9-1.8 8.9-6.1 10.5-11.3.4-1.3.7-2.7.8-4 0-.5-.4-.9-.9-.9h-1.1zM8.5 17.4c-.4.2-.9.3-1.3.4-.7-2.2-.3-4.6 1.2-6.4 1.8-2.1 4.5-3.5 7.6-4-1.2 4.3-4.3 7.9-7.5 10z"></path>
+          </svg>
+          <span class="sr-only">Recommendations</span>
+        </a>
+        <a href="/search" aria-label="Search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.77 13.29l4.72 4.72 1.41-1.41-4.72-4.72A7.5 7.5 0 0 0 10.5 3zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"></path>
+          </svg>
+          <span class="sr-only">Search</span>
+        </a>
+      </nav>
+    </aside>
+    <div class="main">
+      <header class="top-nav">
+        <span class="logo">MongoTV</span>
+      </header>
+      <main class="main-content">
+        <a href="/" class="back-link">Back to Home</a>
+
+        <section class="hero-card">
+          <div class="detail-poster">
+            <% if (item.poster) { %>
+              <img src="<%= item.poster %>" alt="<%= safeDetail.title %> poster" />
+            <% } else { %>
+              <span><%= (safeDetail.title || '')[0] %></span>
+            <% } %>
+          </div>
+          <div class="hero-info">
+            <h1 class="title"><%= safeDetail.title %></h1>
+            <div class="meta-line">
+              <% if (safeDetail.year) { %><span><%= safeDetail.year %></span><% } %>
+              <% if (safeDetail.type) { %><span><%= safeDetail.type %></span><% } %>
+              <% if (safeDetail.rated) { %><span><%= safeDetail.rated %></span><% } %>
+              <% if (safeDetail.runtime) { %><span><%= safeDetail.runtime %></span><% } %>
+              <% if (safeDetail.released) { %><span>Released <%= safeDetail.released %></span><% } %>
+            </div>
+
+            <% if (safeDetail.genres && safeDetail.genres.length) { %>
+              <div class="chips">
+                <% safeDetail.genres.forEach(function(genre) { %>
+                  <span class="chip"><%= genre %></span>
+                <% }); %>
+              </div>
+            <% } %>
+
+            <% if (safeDetail.plot) { %>
+              <p class="lead"><%= safeDetail.plot %></p>
+            <% } %>
+          </div>
+        </section>
+
+        <section class="detail-grid">
+          <div class="detail-panel">
+            <h2>Story</h2>
+            <% if (safeDetail.fullplot) { %>
+              <p><%= safeDetail.fullplot %></p>
+            <% } else if (safeDetail.plot) { %>
+              <p><%= safeDetail.plot %></p>
+            <% } else { %>
+              <p class="text-muted">No synopsis available.</p>
+            <% } %>
+          </div>
+
+          <div class="detail-panel">
+            <h2>Cast and Crew</h2>
+            <div class="stack">
+              <div>
+                <h3>Cast</h3>
+                <% if (safeDetail.cast && safeDetail.cast.length) { %>
+                  <p><%= safeDetail.cast.join(', ') %></p>
+                <% } else { %><p class="text-muted">Not listed</p><% } %>
+              </div>
+              <div>
+                <h3>Directors</h3>
+                <% if (safeDetail.directors && safeDetail.directors.length) { %>
+                  <p><%= safeDetail.directors.join(', ') %></p>
+                <% } else { %><p class="text-muted">Not listed</p><% } %>
+              </div>
+              <div>
+                <h3>Writers</h3>
+                <% if (safeDetail.writers && safeDetail.writers.length) { %>
+                  <p><%= safeDetail.writers.join(', ') %></p>
+                <% } else { %><p class="text-muted">Not listed</p><% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-panel">
+            <h2>Details</h2>
+            <ul class="detail-list">
+              <li>
+                <span>Languages</span>
+                <strong><%= safeDetail.languages && safeDetail.languages.length ? safeDetail.languages.join(', ') : 'N/A' %></strong>
+              </li>
+              <li>
+                <span>Countries</span>
+                <strong><%= safeDetail.countries && safeDetail.countries.length ? safeDetail.countries.join(', ') : 'N/A' %></strong>
+              </li>
+              <li>
+                <span>Awards</span>
+                <strong><%= safeDetail.awardsText || 'N/A' %></strong>
+              </li>
+            </ul>
+          </div>
+
+          <div class="detail-panel">
+            <h2>Ratings</h2>
+            <ul class="detail-list">
+              <li>
+                <span>IMDb Rating</span>
+                <strong><%= safeDetail.imdbRating !== null ? safeDetail.imdbRating : 'N/A' %></strong>
+              </li>
+              <li>
+                <span>IMDb Votes</span>
+                <strong><%= safeDetail.imdbVotes !== null ? safeDetail.imdbVotes.toLocaleString() : 'N/A' %></strong>
+              </li>
+              <li>
+                <span>Rotten Tomatoes Viewer</span>
+                <strong>
+                  <% if (safeDetail.tomatoesViewerMeter !== null || safeDetail.tomatoesViewerRating !== null) { %>
+                    <%= safeDetail.tomatoesViewerMeter !== null ? safeDetail.tomatoesViewerMeter + '%' : '' %>
+                    <%= safeDetail.tomatoesViewerMeter !== null && safeDetail.tomatoesViewerRating !== null ? ' / ' : '' %>
+                    <%= safeDetail.tomatoesViewerRating !== null ? safeDetail.tomatoesViewerRating + '/5' : '' %>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </strong>
+              </li>
+              <li>
+                <span>Viewer Reviews</span>
+                <strong><%= safeDetail.tomatoesViewerReviews !== null ? safeDetail.tomatoesViewerReviews.toLocaleString() : 'N/A' %></strong>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="recommendations">
+          <h2>Recommended for you</h2>
+          <% if (recommendedItems && recommendedItems.length) { %>
+            <div class="row-scroll">
+              <% recommendedItems.forEach(function(rec) { %>
+                <a href="/content/<%= rec._id %>" class="content-card">
+                  <div class="card-poster">
+                    <% if (rec.poster) { %>
+                      <img src="<%= rec.poster %>" alt="<%= rec.title %> poster" loading="lazy" />
+                    <% } else { %>
+                      <span><%= (rec.title || '')[0] %></span>
+                    <% } %>
+                  </div>
+                  <div class="card-info">
+                    <span class="card-title"><%= rec.title %></span>
+                    <span class="card-meta">
+                      <%= rec.year || 'Year unknown' %>
+                      <% if (rec.type) { %> | <%= rec.type %><% } %>
+                    </span>
+                  </div>
+                </a>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <p class="text-muted">No similar titles available for this selection yet.</p>
+          <% } %>
+        </section>
+      </main>
+    </div>
+  </div>
+  <%- include('partials/chat-overlay') %>
+  <style>
+    .back-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 1.1rem;
+      display: inline-block;
+      font-size: 1.05rem;
+    }
+    .back-link:hover {
+      color: var(--orange);
+    }
+    .hero-card {
+      display: flex;
+      gap: 2.25rem;
+      background: var(--bg-card);
+      border-radius: 14px;
+      padding: 1.75rem;
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 1.6rem;
+    }
+    .detail-poster {
+      width: 240px;
+      height: 360px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--orange-dim), var(--orange));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .detail-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .detail-poster span {
+      font-size: 4.5rem;
+      font-weight: 700;
+      color: rgba(0,0,0,0.5);
+    }
+    .hero-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .title {
+      margin: 0 0 0.65rem;
+      font-size: 2.5rem;
+      line-height: 1.1;
+    }
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      color: var(--text-muted);
+      margin-bottom: 0.95rem;
+    }
+    .meta-line span {
+      background: rgba(255,255,255,0.06);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 1rem;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .chip {
+      background: rgba(71,162,72,0.18);
+      color: var(--orange);
+      border: 1px solid rgba(71,162,72,0.35);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.95rem;
+    }
+    .lead {
+      margin: 0;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 70ch;
+      font-size: 1.22rem;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.9rem;
+    }
+    .detail-panel {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 1.2rem 1.3rem;
+    }
+    .detail-panel h2 {
+      margin: 0 0 0.8rem;
+      font-size: 1.35rem;
+    }
+    .detail-panel h3 {
+      margin: 0 0 0.2rem;
+      font-size: 1rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .detail-panel p {
+      margin: 0;
+      line-height: 1.65;
+      font-size: 1.12rem;
+    }
+    .stack {
+      display: grid;
+      gap: 0.8rem;
+    }
+    .detail-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.75rem;
+    }
+    .detail-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px dashed rgba(255,255,255,0.09);
+      padding-bottom: 0.65rem;
+      font-size: 1.03rem;
+    }
+    .detail-list li:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .detail-list span {
+      color: var(--text-muted);
+    }
+    .recommendations h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.55rem;
+    }
+    .row-scroll {
+      display: flex;
+      gap: 1.2rem;
+      overflow-x: auto;
+      padding-bottom: 0.7rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--orange-dim) var(--bg-card);
+    }
+    .row-scroll::-webkit-scrollbar { height: 6px; }
+    .row-scroll::-webkit-scrollbar-track { background: var(--bg-card); border-radius: 3px; }
+    .row-scroll::-webkit-scrollbar-thumb { background: var(--orange-dim); border-radius: 3px; }
+    .content-card {
+      flex: 0 0 216px;
+      background: var(--bg-card);
+      border-radius: 10px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .content-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      border-color: rgba(71,162,72,0.4);
+    }
+    .card-poster {
+      height: 324px;
+      background: linear-gradient(135deg, var(--orange-dim), var(--orange));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .card-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .card-poster span {
+      font-size: 3rem;
+      font-weight: 700;
+      color: rgba(0,0,0,0.5);
+    }
+    .card-info { padding: 0.95rem 1rem 1rem; }
+    .card-title {
+      font-weight: 700;
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 1.12rem;
+      line-height: 1.25;
+    }
+    .card-meta {
+      font-size: 0.97rem;
+      color: var(--text-muted);
+      display: block;
+    }
+    .text-muted { color: var(--text-muted); font-size: 1.05rem; }
+    @media (max-width: 980px) {
+      .hero-card {
+        flex-direction: column;
+      }
+      .detail-poster {
+        width: 100%;
+        height: 320px;
+      }
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</body>
+</html>

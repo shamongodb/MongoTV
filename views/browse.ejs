@@ -1,0 +1,131 @@
+<%- include('partials/head') %>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a href="/" class="active" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"></path>
+          </svg>
+          <span class="sr-only">Home</span>
+        </a>
+        <a href="/chat/recommendations" aria-label="Recommendations">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.5 3.5c-4.9.1-9.4 2.1-12.2 5.3-2.7 3.2-3.3 7.6-1.2 11.7.2.4.6.6 1 .6 1.1 0 2.2-.2 3.1-.6 4.9-1.8 8.9-6.1 10.5-11.3.4-1.3.7-2.7.8-4 0-.5-.4-.9-.9-.9h-1.1zM8.5 17.4c-.4.2-.9.3-1.3.4-.7-2.2-.3-4.6 1.2-6.4 1.8-2.1 4.5-3.5 7.6-4-1.2 4.3-4.3 7.9-7.5 10z"></path>
+          </svg>
+          <span class="sr-only">Recommendations</span>
+        </a>
+        <a href="/search" aria-label="Search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.77 13.29l4.72 4.72 1.41-1.41-4.72-4.72A7.5 7.5 0 0 0 10.5 3zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"></path>
+          </svg>
+          <span class="sr-only">Search</span>
+        </a>
+        <a href="/how-it-works" aria-label="How It Works">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M11 7h2V5h-2v2zm0 12h2v-8h-2v8zm1-17C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path>
+          </svg>
+          <span class="sr-only">How It Works</span>
+        </a>
+      </nav>
+    </aside>
+    <div class="main">
+      <header class="top-nav">
+        <span class="logo">MongoTV</span>
+      </header>
+      <main class="main-content">
+        <% if (loadWarning) { %>
+          <p class="text-warning"><%= loadWarning %></p>
+        <% } %>
+        <% if (!genreRows || genreRows.length === 0) { %>
+          <p class="text-muted">No content yet. Run <code>node scripts/ingest.js</code> to seed the catalog.</p>
+        <% } else { %>
+          <% genreRows.forEach(function(row) { %>
+            <section class="genre-row">
+              <h2 class="genre-title"><%= row.genre %></h2>
+              <div class="row-scroll">
+                <% row.items.slice(0, 15).forEach(function(item) { %>
+                  <a href="/content/<%= item._id %>" class="content-card">
+                    <div class="card-poster">
+                      <% if (item.poster) { %>
+                        <img src="<%= item.poster %>" alt="<%= item.title %> poster" loading="lazy" />
+                      <% } else { %>
+                        <span><%= (item.title || '')[0] %></span>
+                      <% } %>
+                    </div>
+                    <div class="card-info">
+                      <span class="card-title"><%= item.title %></span>
+                      <% if (item.year) { %><span class="card-meta"><%= item.year %></span><% } %>
+                    </div>
+                  </a>
+                <% }); %>
+              </div>
+            </section>
+          <% }); %>
+        <% } %>
+      </main>
+    </div>
+  </div>
+  <%- include('partials/chat-overlay') %>
+  <style>
+    .text-muted { color: var(--text-muted); font-size: 1.1rem; }
+    .text-warning { color: #ffb347; margin-bottom: 1.1rem; font-size: 1.1rem; }
+    .genre-row { margin-bottom: 2.3rem; }
+    .genre-title {
+      font-size: 1.55rem;
+      font-weight: 700;
+      margin: 0 0 0.95rem;
+      color: var(--text);
+    }
+    .row-scroll {
+      display: flex;
+      gap: 1.2rem;
+      overflow-x: auto;
+      padding-bottom: 0.7rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--orange-dim) var(--bg-card);
+    }
+    .row-scroll::-webkit-scrollbar { height: 6px; }
+    .row-scroll::-webkit-scrollbar-track { background: var(--bg-card); border-radius: 3px; }
+    .row-scroll::-webkit-scrollbar-thumb { background: var(--orange-dim); border-radius: 3px; }
+    .content-card {
+      flex: 0 0 216px;
+      background: var(--bg-card);
+      border-radius: 10px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .content-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      border-color: rgba(71,162,72,0.4);
+    }
+    .card-poster {
+      height: 324px;
+      background: linear-gradient(135deg, var(--orange-dim), var(--orange));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .card-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .card-poster span {
+      font-size: 3rem;
+      font-weight: 700;
+      color: rgba(0,0,0,0.5);
+    }
+    .card-info { padding: 0.95rem 1rem 1rem; }
+    .card-title { font-weight: 700; display: block; font-size: 1.12rem; line-height: 1.25; }
+    .card-meta { font-size: 0.97rem; color: var(--text-muted); }
+  </style>
+</body>
+</html>

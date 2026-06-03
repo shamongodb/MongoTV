@@ -1,0 +1,199 @@
+<%- include('partials/head') %>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a href="/" aria-label="Home">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5.5v-6h-5v6H4a1 1 0 0 1-1-1v-9.5z"></path>
+          </svg>
+          <span class="sr-only">Home</span>
+        </a>
+        <a href="/chat/recommendations" class="active" aria-label="Recommendations">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18.5 3.5c-4.9.1-9.4 2.1-12.2 5.3-2.7 3.2-3.3 7.6-1.2 11.7.2.4.6.6 1 .6 1.1 0 2.2-.2 3.1-.6 4.9-1.8 8.9-6.1 10.5-11.3.4-1.3.7-2.7.8-4 0-.5-.4-.9-.9-.9h-1.1zM8.5 17.4c-.4.2-.9.3-1.3.4-.7-2.2-.3-4.6 1.2-6.4 1.8-2.1 4.5-3.5 7.6-4-1.2 4.3-4.3 7.9-7.5 10z"></path>
+          </svg>
+          <span class="sr-only">Recommendations</span>
+        </a>
+      </nav>
+    </aside>
+    <div class="main">
+      <header class="top-nav">
+        <span class="logo">MongoTV</span>
+      </header>
+      <main class="main-content">
+        <h1 style="margin:0 0 0.5rem; font-size:1.75rem; font-weight:700;">Live Guide</h1>
+        <p style="color:var(--text-muted); margin:0 0 1.5rem;">Ask for recommendations. I'll search the catalog using AI.</p>
+        <div style="margin-bottom: 0.75rem;">
+          <button id="new-session-btn" type="button" class="new-session-btn">New Session</button>
+        </div>
+        <div class="chat-box">
+          <div id="messages"></div>
+          <form id="chat-form" class="chat-form">
+            <input type="text" id="message" name="message" placeholder="e.g. Something funny for the family..." autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+  <style>
+    .chat-box {
+      max-width: 640px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    #messages {
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .msg { margin-bottom: 1rem; }
+    .msg.user { text-align: right; }
+    .msg .bubble {
+      display: inline-block;
+      max-width: 85%;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+    .msg.user .bubble { background: var(--orange); color: #fff; }
+    .msg.bot .bubble { background: var(--bg-hover); color: var(--text); }
+    .chat-form {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .chat-form input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    .chat-form input:focus {
+      outline: none;
+      border-color: var(--orange);
+    }
+    .chat-form button {
+      padding: 0.75rem 1.25rem;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .chat-form button:hover { background: var(--orange-dim); }
+    .chat-form button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .new-session-btn {
+      padding: 0.45rem 0.8rem;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .new-session-btn:hover {
+      color: var(--text);
+      border-color: rgba(255,255,255,0.3);
+    }
+  </style>
+  <script>
+    const CHAT_SESSION_KEY = 'mongotv_chat_session_id';
+    const serverSessionId = '<%= sessionId %>';
+
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('message');
+    const messages = document.getElementById('messages');
+    const newSessionBtn = document.getElementById('new-session-btn');
+
+    function resolveSessionId() {
+      const stored = sessionStorage.getItem(CHAT_SESSION_KEY);
+      if (stored) return stored;
+      sessionStorage.setItem(CHAT_SESSION_KEY, serverSessionId);
+      return serverSessionId;
+    }
+
+    let sessionId = resolveSessionId();
+
+    function addMessage(text, isUser) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + (isUser ? 'user' : 'bot');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      div.appendChild(bubble);
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function loadSessionHistory() {
+      try {
+        const res = await fetch(`/chat/history?sessionId=${encodeURIComponent(sessionId)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const history = Array.isArray(data.messages) ? data.messages : [];
+        messages.innerHTML = '';
+        for (const item of history) {
+          const isUser = item.role === 'user';
+          addMessage(item.content, isUser);
+        }
+      } catch (_) {
+        // Keep the chat usable if history cannot be loaded.
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = '';
+      addMessage(message, true);
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, sessionId }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const msg = data.detail ? `${data.error} (${data.detail})` : (data.error || 'Something went wrong.');
+          addMessage(msg, false);
+          return;
+        }
+        if (data.sessionId && data.sessionId !== sessionId) {
+          sessionId = data.sessionId;
+          sessionStorage.setItem(CHAT_SESSION_KEY, sessionId);
+        }
+        addMessage(data.response, false);
+      } catch (err) {
+        addMessage('Network error. Try again.', false);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    newSessionBtn.addEventListener('click', () => {
+      sessionStorage.removeItem(CHAT_SESSION_KEY);
+      window.location.href = '/chat?new=1';
+    });
+
+    loadSessionHistory();
+  </script>
+</body>
+</html>
