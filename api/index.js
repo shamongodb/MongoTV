@@ -17,7 +17,69 @@ try {
   console.error('Failed to load Express app at module init:', err);
 }
 
+function safeReaddir(dir) {
+  try {
+    return require('fs').readdirSync(dir);
+  } catch (err) {
+    return `<readdir failed: ${err.code || err.message}>`;
+  }
+}
+
+function safeReadJson(file) {
+  try {
+    return JSON.parse(require('fs').readFileSync(file, 'utf8'));
+  } catch (err) {
+    return `<read failed: ${err.code || err.message}>`;
+  }
+}
+
+function deploymentInfo() {
+  return {
+    deploymentSha: process.env.VERCEL_GIT_COMMIT_SHA || null,
+    deploymentId: process.env.VERCEL_DEPLOYMENT_ID || null,
+    branch: process.env.VERCEL_GIT_COMMIT_REF || null,
+    commitMsg: process.env.VERCEL_GIT_COMMIT_MESSAGE || null,
+    region: process.env.VERCEL_REGION || process.env.AWS_REGION || null,
+    node: process.version,
+  };
+}
+
+function uuidLayout() {
+  const base = require('path').join(process.cwd(), 'node_modules');
+  return {
+    'node_modules/uuid/package.json': safeReadJson(
+      require('path').join(base, 'uuid', 'package.json'),
+    ),
+    'node_modules/@langchain/langgraph-checkpoint': safeReaddir(
+      require('path').join(base, '@langchain', 'langgraph-checkpoint'),
+    ),
+    'node_modules/@langchain/langgraph-checkpoint/node_modules': safeReaddir(
+      require('path').join(base, '@langchain', 'langgraph-checkpoint', 'node_modules'),
+    ),
+  };
+}
+
 module.exports = function handler(req, res) {
+  if (req.url === '/__diag') {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.end(
+      JSON.stringify(
+        {
+          deployment: deploymentInfo(),
+          loadError: loadError
+            ? { message: loadError.message, code: loadError.code }
+            : null,
+          uuid: uuidLayout(),
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+
   if (loadError) {
     const payload = {
       error: 'app_failed_to_load',
@@ -25,11 +87,8 @@ module.exports = function handler(req, res) {
       name: loadError.name || null,
       code: loadError.code || null,
       stack: String(loadError.stack || '').split('\n').slice(0, 25),
-      node: process.version,
-      cwd: process.cwd(),
-      runtimeEnvKeys: Object.keys(process.env)
-        .filter((k) => !/SECRET|KEY|TOKEN|PASSWORD|URI|DSN/i.test(k))
-        .sort(),
+      deployment: deploymentInfo(),
+      uuid: uuidLayout(),
     };
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
